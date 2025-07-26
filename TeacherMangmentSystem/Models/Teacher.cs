@@ -6,14 +6,17 @@ public class Teacher
     public int Id { get; set; }
     public string Name { get; set; }
     public Course Course { get; set; }
-    public Teacher(string teacherName , string subject)
+    public Grade  Grade { get; set; }
+    public Teacher(string teacherName , string subject,Grade grade)
     {
-        Course course = new Course(subject);
+        Course course = new Course(subject,grade);
         Id = ++TeacherCount;
         Name = teacherName;
         course.TeacherId = Id;
         Course = course;
+        Grade = grade;
     }
+        
     
     
 }

@@ -6,17 +6,66 @@ List<Teacher> teachers = [];
 List<Student> students = [];
 List<Course> courses = [];
 
-void AddTeacher(string name, string subject)
+void AddTeacher(string name, string subject, Grade grade)
 {
-    var teacher = new Teacher(name, subject);
+    var teacher = new Teacher(name, subject, grade);
     teachers.Add(teacher);
     courses.Add(teacher.Course);
 }
 
-void AddStudent(string name)
+void AddStudent(string name, Grade grade)
 {
-    var student = new Student(name);
+    var student = new Student(name, grade);
     students.Add(student);
+}
+
+Grade SelectGrade()
+{
+    Console.WriteLine("Select Grade:\n" +
+                      "1. First\n" +
+                      "2. Second\n" +
+                      "3. Third");
+    var choice = Console.ReadKey();
+
+    switch (choice.KeyChar)
+    {
+        case '1':
+            return Grade.First;
+        case '2':
+            return Grade.Second;
+        case '3':
+            return Grade.Third;
+        default:
+            Console.WriteLine("\nInvalid choice.");
+            return SelectGrade();
+    }
+}
+
+Grade? SelectGradeOrAll()
+{
+    Console.WriteLine("Select Grade to view Teachers or press 'a' for All:\n" +
+                      "1. First\n" +
+                      "2. Second\n" +
+                      "3. Third\n" +
+                      "a. All");
+    var choice = Console.ReadKey();
+    switch (choice.KeyChar)
+    {
+        case '1':
+            return Grade.First;
+        case '2':
+            return Grade.Second;
+        case '3':
+            return Grade.Third;
+        case 'a':
+        case 'A':
+            return null; 
+        default:
+            Console.WriteLine("\nInvalid choice.");
+            return SelectGradeOrAll();
+    }
+
+
 }
 
 while (true)
@@ -39,7 +88,8 @@ while (true)
             var name = Console.ReadLine();
             if (!string.IsNullOrEmpty(name))
             {
-                AddStudent(name);
+                var grade = SelectGrade();
+                AddStudent(name, grade);
                 Console.WriteLine($"Student {name} added successfully.");
             }
             else
@@ -57,7 +107,8 @@ while (true)
             var subject = Console.ReadLine();
             if (!string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(subject))
             {
-                AddTeacher(name, subject);
+                var grade = SelectGrade();
+                AddTeacher(name, subject, grade);
                 Console.WriteLine($"Teacher {name} added successfully.");
             }
             else
@@ -69,25 +120,35 @@ while (true)
         }
         case '3':
         {
+            var grade = SelectGradeOrAll();
+            var filteredStudents = grade.HasValue
+                ? students.Where(s => s.Grade == grade.Value).ToList()
+                : students.OrderBy(s => s.Grade).ToList();
             Console.WriteLine("\nStudents List:");
-            Console.WriteLine("ID\tName");
-            foreach (var student in students)
+            Console.WriteLine("ID\tName\tGrade");
+            foreach (var student in filteredStudents)
             {
                 var coursesSting = student.Courses.Count > 0
                     ? "Courses:" + string.Join(", ", student.Courses.Select(c => c.Subject))
                     : "No Classes";
-                Console.WriteLine($"{student.Id}\t{student.Name}\t {coursesSting}");
+                Console.WriteLine($"{student.Id}\t{student.Name}\t {coursesSting}\t {student.Grade}");
             }
 
             break;
         }
         case '4':
         {
+            var grade = SelectGradeOrAll();
+            var filteredTeachers = grade.HasValue
+                ? teachers.Where(t => t.Grade == grade.Value).ToList()
+                : teachers.OrderBy(t => t.Grade).ToList();
+
+
             Console.WriteLine("\nTeacher List:");
-            Console.WriteLine("ID\tName\tSubject");
-            foreach (var teacher in teachers)
+            Console.WriteLine("ID\tName\tSubject\tGrade");
+            foreach (var teacher in filteredTeachers)
             {
-                Console.WriteLine($"{teacher.Id}\t{teacher.Name}\t{teacher.Course.Subject}");
+                Console.WriteLine($"{teacher.Id}\t{teacher.Name}\t{teacher.Course.Subject}\t {teacher.Grade}");
             }
 
             break;
@@ -129,8 +190,13 @@ while (true)
                         }
                         case '2':
                         {
+                            if (courses.Where(x => x.Grade == student.Grade).ToList().Count == 0)
+                            {
+                                Console.WriteLine("\nNo classes available to add. Please add a class first.");
+                                break;
+                            }
                             Console.WriteLine("\nAvailable Classes:");
-                            foreach (var course in courses)
+                            foreach (var course in courses.Where(x => x.Grade == student.Grade))
                             {
                                 Console.WriteLine($"{course.Id}. {course.Subject}");
                             }
